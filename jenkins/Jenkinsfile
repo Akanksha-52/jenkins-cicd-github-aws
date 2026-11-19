@@ -1,0 +1,41 @@
+
+pipeline {
+    agent any
+
+    triggers {
+        githubPush()
+    }
+
+    environment {
+        WEB_SERVER = 'WEB_SERVER_PRIVATE_IP'
+        SSH_KEY = '/var/lib/jenkins/.ssh/id_ed25519'
+        WEB_USER = 'ubuntu'
+    }
+
+    stages {
+
+        stage('Pull Code from GitHub') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/YOUR-USERNAME/jenkins-cicd-github-aws.git'
+            }
+        }
+
+        stage('Deploy Website to Apache') {
+            steps {
+                sh '''
+                    scp -i "$SSH_KEY" \
+                    -o StrictHostKeyChecking=yes \
+                    website/index.html \
+                    ${WEB_USER}@${WEB_SERVER}:/var/www/html/index.html
+                '''
+            }
+        }
+
+        stage('Deployment Successful') {
+            steps {
+                echo 'Website deployed successfully!'
+            }
+        }
+    }
+}
